@@ -20,27 +20,9 @@ public class StepClean {
     Response response;
     RequestInformation requestInformation = new RequestInformation();
     Map<String,String> dynamicVar= new HashMap<>();
-    
-    
-    
-    @Given("authenticacion {}")
-    public void authenticacion(String type) {
 
-        String authBasic="Basic "+ Base64.getEncoder().encodeToString((Configuration.user+":"+Configuration.pwd).getBytes());
-        if (type.equals("basica")){
-            requestInformation.setHeaders("Authorization",authBasic);
-        }else{
-            RequestInformation tokenRequest= new RequestInformation();
-            tokenRequest.setUrl(Configuration.host+"/api/authentication/token.json");
-            tokenRequest.setHeaders("Authorization",authBasic);
-            response=FactoryRequest.make("get").send(tokenRequest);
-            String token= response.then().extract().path("TokenString");
-            requestInformation.setHeaders("Token",token);
-        }
 
-    }
-    
-    
+
     @Given("con el nuevo usuario se usa {}")
     public void AuthNuevoUsuario(String type) {
 
@@ -58,18 +40,36 @@ public class StepClean {
 
     }
 
+    @Given("authenticacion {}")
+    public void authenticacion(String type) {
+
+        String authBasic="Basic "+ Base64.getEncoder().encodeToString((Configuration.user+":"+Configuration.pwd).getBytes());
+        if (type.equals("basica")){
+            requestInformation.setHeaders("Authorization",authBasic);
+        }else{
+            RequestInformation tokenRequest= new RequestInformation();
+            tokenRequest.setUrl(Configuration.host+"/api/authentication/token.json");
+            tokenRequest.setHeaders("Authorization",authBasic);
+            response=FactoryRequest.make("get").send(tokenRequest);
+            String token= response.then().extract().path("TokenString");
+            requestInformation.setHeaders("Token",token);
+        }
+
+    }
+
+
+
+    @Then("la respuesta seria {int}")
+    public void respuestaSeria(int expectedResult) {
+        response.then()
+                .statusCode(expectedResult);
+    }
 
     @When("envio {} request a {}")
     public void sendRequestURL(String method, String url, String body) {
         requestInformation.setUrl(Configuration.host+replaceVar(url))
                           .setBody(replaceVar(body));
         response= FactoryRequest.make(method).send(requestInformation);
-    }
-
-    @Then("la respuesta seria {int}")
-    public void respuestaSeria(int expectedResult) {
-        response.then()
-                .statusCode(expectedResult);
     }
 
     @And("expected body")
@@ -94,9 +94,7 @@ public class StepClean {
             value=value.replace(attribute,dynamicVar.get(attribute));
         }
         return value;
-    }
-    
-    ///////////////////////////////////
+    }//TODO
 
     @Given("Crear un nuevo usario")
     public void CrearUsuario() {
